@@ -13,16 +13,24 @@ app.use(bodyParser.json());
 const connectionString = "mongodb+srv://dbUser:dbUserPassword@maincluster-wqbcy.mongodb.net/test?retryWrites=true&w=majority"; // prettier-ignore
 mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true }); // prettier-ignore
 
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("client/build"));
+}
+
+app.get("*", (request, response) => {
+  response.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
+
 // Simply returns all items
 app.get("/api/recipes/all", (req, res) => {
   console.log("Got a request for all recipes");
-  recipe.find({}).then(result => res.send(result));
+  recipe.find({}).then((result) => res.send(result));
 });
 
 // Get an item by name, and return all items with that name
 app.get("/api/recipes/:name", (req, res) => {
   // console.log("GOT A REQUEST", new Date(), "item name is", req.params.name);
-  recipe.find({ itemName: req.params.name }).then(result => {
+  recipe.find({ itemName: req.params.name }).then((result) => {
     res.send(result);
   });
 });
@@ -30,7 +38,7 @@ app.get("/api/recipes/:name", (req, res) => {
 // Posts an item by name, checks to make sure the recipe name is unique
 app.post("/api/recipes/:name", (req, res) => {
   console.log("Recieved item to post: ", req.params.name);
-  recipe.find({ recipeName: req.params.recipeName }).then(result => {
+  recipe.find({ recipeName: req.params.recipeName }).then((result) => {
     if (result.length === 0) {
       // The item does not exist, add it
       let item = new recipe(req.body);
